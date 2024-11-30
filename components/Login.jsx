@@ -1,14 +1,27 @@
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 import React from 'react';
 import {
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const Login = () => {
+  const navigation = useNavigation(); // Initialize navigation
+
+  // Handle login action
+  const handleLogin = () => {
+    // You can add authentication logic here
+    // If successful, navigate to the next screen
+    navigation.navigate('WelcomePage'); // Adjust this to the name of the screen you want to navigate to
+  };
+
+  const handleSignup = () => {
+    navigation.navigate('Signup');
+  }
   return (
     <View style={styles.container}>
       {/* Header Logo */}
@@ -27,9 +40,9 @@ const Login = () => {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Email Address"
+            placeholder="Email (Ex. indoorxyz@gmail.com)"
             placeholderTextColor="#bbb"
-            value="Storily@gmail.com" // Default value shown in the image
+             // Default value shown in the image
           />
         </View>
 
@@ -40,33 +53,32 @@ const Login = () => {
             placeholder="Password"
             placeholderTextColor="#bbb"
             secureTextEntry
-            value="123#%*)" // Default value shown in the image
           />
         </View>
 
         {/* Remember Me and Forgot Password */}
         <View style={styles.row}>
-          {/* <View style={styles.checkboxContainer}>
-            <CheckBox value={false} />
-            <Text style={styles.checkboxText}>Remember me</Text>
-          </View> */}
           <TouchableOpacity>
             <Text style={styles.link}>Forget Password?</Text>
           </TouchableOpacity>
         </View>
 
         {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton}>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
         {/* Or Divider */}
         <Text style={styles.orText}>Or</Text>
 
-        {/* Google Login */}
-        <TouchableOpacity style={styles.googleButton}>
-          <Text style={styles.googleText}>Google</Text>
+        {/* Sign Up */}
+        {/* <TouchableOpacity style={styles.googleButton}>
+          <Text style={styles.googleText} onPress={ handleSignup}>Sign Up</Text>
+        </TouchableOpacity> */}
+        <TouchableOpacity style={styles.googleButton} onPress={handleSignup}>
+          <Text style={styles.googleButtonText}>Sign Up</Text>
         </TouchableOpacity>
+
 
         {/* Contact Support */}
         <TouchableOpacity>
@@ -130,15 +142,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-//   checkboxText: {
-//     marginLeft: 8,
-//     fontSize: 14,
-//     color: '#333',
-//   },
   link: {
     color: '#FBB03B',
     fontSize: 14,
@@ -146,7 +149,7 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: '#7A67FF',
     paddingVertical: 15,
-    borderRadius: 20,
+    borderRadius: 15,
     width: '100%',
     alignItems: 'center',
     marginBottom: 20,
@@ -166,7 +169,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     paddingVertical: 15,
-    borderRadius: 20,
+    borderRadius: 15,
     alignItems: 'center',
     marginBottom: 30,
   },

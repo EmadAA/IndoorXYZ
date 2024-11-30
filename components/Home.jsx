@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 import React, { useState } from 'react';
 import {
   FlatList,
@@ -9,11 +10,18 @@ import {
   View
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import SearchSection from './SearchSection';
+import SearchSection from '../components/SearchSection';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [activeFilter, setActiveFilter] = useState('All'); // State to track active filter
+
+  const navigation = useNavigation(); // Initialize navigation inside component
+
+  // Handle navigation to the Booking screen
+  const handleNavigateToBooking = () => {
+    navigation.navigate('Booking'); // Adjust this to the name of your booking screen
+  };
 
   const playgrounds = [
     {
@@ -60,14 +68,16 @@ const Home = () => {
         </View>
         <View style={styles.infoRight}>
           <Text style={styles.nameText}>{item.name}</Text>
-          <Text
-            style={[
-              styles.statusText,
-              { backgroundColor: item.status === 'Available' ? '#4CAF50' : '#F44336' },
-            ]}
-          >
-            {item.status}
-          </Text>
+          <TouchableOpacity onPress={handleNavigateToBooking}>
+            <Text
+              style={[
+                styles.statusText,
+                { backgroundColor: item.status === 'Available' ? '#4CAF50' : '#F44336' },
+              ]}
+            >
+              {item.status}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -96,20 +106,20 @@ const Home = () => {
 
       {/* Filter Section */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View style={styles.filterSection}>
-        {['All', 'Football', 'Cricket', 'Badminton', "Adil","Mukter", "Shuvon"].map((filter) => (
-          <TouchableOpacity key={filter} onPress={() => handleFilterChange(filter)}>
-            <Text
-              style={[
-                styles.filterText,
-                activeFilter === filter && styles.activeFilter,
-              ]}
-            >
-              {filter}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={styles.filterSection}>
+          {['All', 'Football', 'Cricket', 'Badminton', "Adil", "Mukter", "Shuvon"].map((filter) => (
+            <TouchableOpacity key={filter} onPress={() => handleFilterChange(filter)}>
+              <Text
+                style={[
+                  styles.filterText,
+                  activeFilter === filter && styles.activeFilter,
+                ]}
+              >
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
 
       {/* Playground List */}
@@ -135,13 +145,10 @@ const Home = () => {
             name="home"
             style={styles.homeIcon}
             size={30}
-            color={activeTab === 'home' ? '#8E7DFA' : '#777'}
+            color={activeTab === 'home' ? '#7A67FF' : '#777'}
           />
           <Text
-            style={[
-              styles.navText,
-              activeTab === 'home' && styles.activeNavText,
-            ]}
+            style={[styles.navText, activeTab === 'home' && styles.activeNavText]}
           >
             Home
           </Text>
@@ -152,13 +159,10 @@ const Home = () => {
             name="sports-soccer"
             style={styles.playgroundIcon}
             size={30}
-            color={activeTab === 'playground' ? '#8E7DFA' : '#777'}
+            color={activeTab === 'playground' ? '#7A67FF' : '#777'}
           />
           <Text
-            style={[
-              styles.navText,
-              activeTab === 'playground' && styles.activeNavText,
-            ]}
+            style={[styles.navText, activeTab === 'playground' && styles.activeNavText]}
           >
             Playground
           </Text>
@@ -166,16 +170,13 @@ const Home = () => {
 
         <TouchableOpacity onPress={() => setActiveTab('booking')}>
           <Icon
-          style={styles.bookingIcon}
+            style={styles.bookingIcon}
             name="event"
             size={30}
-            color={activeTab === 'booking' ? '#8E7DFA' : '#777'}
+            color={activeTab === 'booking' ? '#7A67FF' : '#777'}
           />
           <Text
-            style={[
-              styles.navText,
-              activeTab === 'booking' && styles.activeNavText,
-            ]}
+            style={[styles.navText, activeTab === 'booking' && styles.activeNavText]}
           >
             Booking
           </Text>
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
   activeFilter: {
     fontWeight: 'bold',
     color: '#fff',
-    backgroundColor: '#8E7DFA',
+    backgroundColor: '#7A67FF',
   },
     container: {
       flex: 1,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
     },
     logoHighlight: {
-      color: '#8E7DFA',
+      color: '#7A67FF',
     },
     menuIcon: {
       fontSize: 24,
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
       height: 40,
     },
     findNowButton: {
-      backgroundColor: '#8E7DFA',
+      backgroundColor: '#7A67FF',
       borderRadius: 10,
       alignItems: 'center',
       paddingVertical: 10,
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
     },
     viewAllText: {
-      color: '#8E7DFA',
+      color: '#7A67FF',
     },
     playgroundCard: {
       flexDirection: 'column',

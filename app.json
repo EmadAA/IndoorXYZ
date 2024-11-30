@@ -2,6 +2,7 @@
   "expo": {
     "name": "indoorxyz",
     "slug": "indoorxyz",
+    "entryPoint": "./node_modules/expo/AppEntry.js",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

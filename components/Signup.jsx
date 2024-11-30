@@ -1,6 +1,8 @@
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 import React from 'react';
 import {
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -9,80 +11,89 @@ import {
 } from 'react-native';
 
 const Signup = () => {
+  const navigation = useNavigation(); // Initialize navigation
+
+  // Handle login action for the SignUp button
+  const handleSignUp = () => {
+    // You can add authentication logic here
+    // If successful, navigate to the Login screen
+    navigation.navigate('Login'); // Adjust this to the name of the screen you want to navigate to
+  };
+
+  // Handle Google login action
+  const handleGoogleLogin = () => {
+    // Add logic for Google login here if needed
+    navigation.navigate('Login'); // Navigate to Login page after Google login
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Header Logo */}
-      <View style={styles.header}>
-        <Image
-          source={require('../assets/Logo.png')} // Replace with your logo URL
-          style={styles.logo}
-        />
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={styles.container}>
+        {/* Header Logo */}
+        <View style={styles.header}>
+          <Image
+            source={require('../assets/Logo.png')} // Replace with your logo URL
+            style={styles.logo}
+          />
+        </View>
+
+        {/* Sign Up Form */}
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>Create Account</Text>
+
+          {/* Full Name Input */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Name (Ex. Indoor XYZ)"
+              placeholderTextColor="#bbb"
+              // Default value shown in the image
+            />
+          </View>
+
+          {/* Email Input */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email (Ex. indoorxyz@gmail.com)"
+              placeholderTextColor="#bbb"
+               // Default value shown in the image
+            />
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#bbb"
+              secureTextEntry
+              // Default value shown in the image
+            />
+          </View>
+
+          {/* Sign Up Button */}
+          <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
+            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          </TouchableOpacity>
+
+          {/* Or Divider */}
+          <Text style={styles.orText}>Or</Text>
+
+          {/* Google Sign Up Button */}
+          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+            <Text style={styles.googleText}>Already Have an Account?</Text>
+          </TouchableOpacity>
+
+          {/* Contact Support */}
+          <TouchableOpacity>
+            <Text style={styles.contactText}>
+              Did You Face Any Issue? <Text style={styles.contactLink}>Contact US</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      {/* Sign Up Form */}
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Create Account</Text>
-
-        {/* Full Name Input */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Full Name"
-            placeholderTextColor="#bbb"
-            value="Gilman Chowdhury" // Default value shown in the image
-          />
-        </View>
-
-        {/* Email Input */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email Address"
-            placeholderTextColor="#bbb"
-            value="Storily@gmail.com" // Default value shown in the image
-          />
-        </View>
-
-        {/* Password Input */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#bbb"
-            secureTextEntry
-            value="123#%*)" // Default value shown in the image
-          />
-        </View>
-
-        {/* Remember Me */}
-        <View style={styles.row}>
-          {/* <View style={styles.checkboxContainer}>
-            <CheckBox value={false} />
-            <Text style={styles.checkboxText}>Remember me</Text>
-          </View> */}
-        </View>
-
-        {/* Sign Up Button */}
-        <TouchableOpacity style={styles.signUpButton}>
-          <Text style={styles.signUpButtonText}>Sign Up</Text>
-        </TouchableOpacity>
-
-        {/* Or Divider */}
-        <Text style={styles.orText}>Or</Text>
-
-        {/* Google Sign Up */}
-        <TouchableOpacity style={styles.googleButton}>
-          <Text style={styles.googleText}>Google</Text>
-        </TouchableOpacity>
-
-        {/* Contact Support */}
-        <TouchableOpacity>
-          <Text style={styles.contactText}>
-            Did You Face Any Issue? <Text style={styles.contactLink}>Contact US</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -131,24 +142,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  // checkboxContainer: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  // },
-  // checkboxText: {
-  //   marginLeft: 8,
-  //   fontSize: 14,
-  //   color: '#333',
-  // },
   signUpButton: {
-    backgroundColor: '#7A67FF',
+    backgroundColor: '#8A5EFF',
     paddingVertical: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -167,9 +164,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     paddingVertical: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom:55,
   },
   googleText: {
     color: '#333',

@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   findNowButton: {
-    backgroundColor: '#8E7DFA',
+    backgroundColor: '#7A67FF', 
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     flexDirection: 'row',
