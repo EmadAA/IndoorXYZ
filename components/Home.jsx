@@ -187,7 +187,6 @@ const Home = () => {
 };
 
 const styles = StyleSheet.create({
-  // Other styles remain unchanged
   filterSection: {
     flexDirection: 'row',
     justifyContent: 'space-around',
