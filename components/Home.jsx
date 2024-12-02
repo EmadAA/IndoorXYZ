@@ -9,8 +9,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import SearchSection from '../components/SearchSection';
+import BottomNavbar from './BottomNavbar';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -139,49 +139,8 @@ const Home = () => {
       </View>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity onPress={() => setActiveTab('home')}>
-          <Icon
-            name="home"
-            style={styles.homeIcon}
-            size={30}
-            color={activeTab === 'home' ? '#7A67FF' : '#777'}
-          />
-          <Text
-            style={[styles.navText, activeTab === 'home' && styles.activeNavText]}
-          >
-            Home
-          </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setActiveTab('playground')}>
-          <Icon
-            name="sports-soccer"
-            style={styles.playgroundIcon}
-            size={30}
-            color={activeTab === 'playground' ? '#7A67FF' : '#777'}
-          />
-          <Text
-            style={[styles.navText, activeTab === 'playground' && styles.activeNavText]}
-          >
-            Playground
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setActiveTab('booking')}>
-          <Icon
-            style={styles.bookingIcon}
-            name="event"
-            size={30}
-            color={activeTab === 'booking' ? '#7A67FF' : '#777'}
-          />
-          <Text
-            style={[styles.navText, activeTab === 'booking' && styles.activeNavText]}
-          >
-            Booking
-          </Text>
-        </TouchableOpacity>
-      </View>
+<BottomNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
     </ScrollView>
   );
 };
@@ -332,30 +291,7 @@ const styles = StyleSheet.create({
       fontWeight:'bold',
       marginTop: 20,
     },
-    bottomNavigation: {
-      marginTop: 25,
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      paddingVertical: 10,
-      borderTopWidth: 1,
-      borderColor: '#ddd',
   
-    },
-    navText: {
-      border: '1px solid #000',
-      fontSize: 14,
-      color: '#333',
-      
-    },
-    playgroundIcon:{
-        marginLeft: 20,
-    },
-    homeIcon:{
-        marginLeft: 5,
-    },
-    bookingIcon:{
-        marginLeft: 10,
-    },
   });
 
 export default Home;
