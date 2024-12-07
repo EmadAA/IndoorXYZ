@@ -7,6 +7,9 @@ const Booking = () => {
     const handleBooking = ()=>{
         navigation.navigate('Confirm')
     };
+    const viewProfile = ()=>{
+        navigation.navigate('Profile')
+    }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -35,7 +38,7 @@ const Booking = () => {
               <Text style={styles.callButtonText}>Call</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.viewProfileButton}>
-              <Text style={styles.viewProfileButtonText}>View Profile</Text>
+              <Text onPress={viewProfile} style={styles.viewProfileButtonText}>View Profile</Text>
             </TouchableOpacity>
           </View>
         </View>
