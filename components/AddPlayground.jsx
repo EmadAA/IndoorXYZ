@@ -1,3 +1,4 @@
+import { addDoc, collection } from "firebase/firestore"; // Firestore methods
 import React, { useState } from "react";
 import {
   Image,
@@ -8,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { db } from "../Config/Firebase"; // Import Firestore config
 
 export default function BookingScreen() {
   const [date, setDate] = useState(new Date());
@@ -22,15 +24,25 @@ export default function BookingScreen() {
     if (selectedDate) setDate(selectedDate);
   };
 
-  const handleSubmit = () => {
-    // Add your submission logic here
-    console.log("Form submitted:", {
-      date,
+  // Handle form submission and add booking to Firestore
+  const handleSubmit = async () => {
+    // Booking data to send to Firestore
+    const bookingData = {
       name,
       phone,
       location,
       price,
-    });
+      date: date.toISOString(),
+      createdAt: new Date(),
+    };
+
+    try {
+      // Add data to the "bookings" collection
+      const docRef = await addDoc(collection(db, "bookings"), bookingData);
+      console.log("Booking added with ID:", docRef.id);
+    } catch (error) {
+      console.error("Error adding booking:", error);
+    }
   };
 
   return (
@@ -38,24 +50,7 @@ export default function BookingScreen() {
       <Image source={require("../assets/play.jpg")} style={styles.image} />
 
       <View style={styles.form}>
-        {/* <TouchableOpacity
-          onPress={() => setShowPicker(!showPicker)}
-          style={styles.input}
-        >
-          <Text style={styles.placeholder}>
-            {date ? date.toLocaleString() : "Select Date & Time"}
-          </Text>
-        </TouchableOpacity> */}
-
-        {/* {showPicker && (
-          <DateTimePicker
-            value={date}
-            mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={onChange}
-          />
-        )} */}
-
+        {/* Date picker functionality can be added here */}
         <TextInput
           style={styles.input}
           placeholder="Your Name"

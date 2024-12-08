@@ -1,6 +1,8 @@
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
-import React from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from 'react';
 import {
+  Alert,
   Image,
   StyleSheet,
   Text,
@@ -8,20 +10,36 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { auth } from '../Config/Firebase'; // Adjust the path to your firebase.js
+
 
 const Login = () => {
   const navigation = useNavigation(); // Initialize navigation
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // Handle login action
-  const handleLogin = () => {
-    // You can add authentication logic here
-    // If successful, navigate to the next screen
-    navigation.navigate('WelcomePage'); // Adjust this to the name of the screen you want to navigate to
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password.');
+      return;
+    }
+
+    try {
+      // Firebase sign-in method
+      await signInWithEmailAndPassword(auth, email, password);
+      Alert.alert('Success', 'Logged in successfully!');
+      navigation.navigate('WelcomePage'); // Adjust this to the name of the screen you want to navigate to
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Login Failed', error.message);
+    }
   };
 
   const handleSignup = () => {
-    navigation.navigate('Signup');
-  }
+    navigation.navigate('Signup'); // Navigate to your signup screen
+  };
+
   return (
     <View style={styles.container}>
       {/* Header Logo */}
@@ -42,7 +60,8 @@ const Login = () => {
             style={styles.input}
             placeholder="Email (Ex. indoorxyz@gmail.com)"
             placeholderTextColor="#bbb"
-             // Default value shown in the image
+            value={email}
+            onChangeText={setEmail} // Bind email state
           />
         </View>
 
@@ -53,6 +72,8 @@ const Login = () => {
             placeholder="Password"
             placeholderTextColor="#bbb"
             secureTextEntry
+            value={password}
+            onChangeText={setPassword} // Bind password state
           />
         </View>
 
@@ -72,13 +93,9 @@ const Login = () => {
         <Text style={styles.orText}>Or</Text>
 
         {/* Sign Up */}
-        {/* <TouchableOpacity style={styles.googleButton}>
-          <Text style={styles.googleText} onPress={ handleSignup}>Sign Up</Text>
-        </TouchableOpacity> */}
         <TouchableOpacity style={styles.googleButton} onPress={handleSignup}>
           <Text style={styles.googleButtonText}>Sign Up</Text>
         </TouchableOpacity>
-
 
         {/* Contact Support */}
         <TouchableOpacity>

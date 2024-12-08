@@ -1,6 +1,9 @@
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
-import React from 'react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore'; // Import Firestore functions
+import React, { useState } from 'react';
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -9,21 +12,53 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { auth, db } from '../Config/Firebase'; // Import Firebase auth and Firestore
 
 const Signup = () => {
   const navigation = useNavigation(); // Initialize navigation
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  // Handle login action for the SignUp button
-  const handleSignUp = () => {
-    // You can add authentication logic here
-    // If successful, navigate to the Login screen
-    navigation.navigate('Login'); // Adjust this to the name of the screen you want to navigate to
+  // Handle sign-up action
+  const handleSignUp = async () => {
+    if (!email || !password || !name) {
+      Alert.alert('Error', 'Please fill out all fields.');
+      return;
+    }
+
+    try {
+      // Firebase sign-up method
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Add user data to Firestore after sign-up
+      await addUserDataToFirestore(user);
+
+      Alert.alert('Success', 'Account created successfully!');
+      navigation.navigate('Login'); // Redirect to login screen
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Signup Failed', error.message);
+    }
   };
 
-  // Handle Google login action
-  const handleGoogleLogin = () => {
-    // Add logic for Google login here if needed
-    navigation.navigate('Login'); // Navigate to Login page after Google login
+  // Add user data to Firestore
+  const addUserDataToFirestore = async (user) => {
+    try {
+      const userDocRef = doc(db, 'users', user.uid); // Create a reference to the user's Firestore document
+      await setDoc(userDocRef, {
+        name: name, // Add user-provided name
+        email: user.email, // Use the email from the authentication result
+        profileImage: '', // Add default or placeholder profile image if available
+        location: '', // Example additional field (could be empty initially)
+        phone: '', // Example additional field (could be empty initially)
+      });
+
+      console.log('User data added to Firestore');
+    } catch (error) {
+      console.error('Error adding user data to Firestore:', error);
+    }
   };
 
   return (
@@ -47,7 +82,8 @@ const Signup = () => {
               style={styles.input}
               placeholder="Enter Name (Ex. Indoor XYZ)"
               placeholderTextColor="#bbb"
-              // Default value shown in the image
+              value={name}
+              onChangeText={setName} // Bind name state
             />
           </View>
 
@@ -57,7 +93,8 @@ const Signup = () => {
               style={styles.input}
               placeholder="Email (Ex. indoorxyz@gmail.com)"
               placeholderTextColor="#bbb"
-               // Default value shown in the image
+              value={email}
+              onChangeText={setEmail} // Bind email state
             />
           </View>
 
@@ -68,7 +105,8 @@ const Signup = () => {
               placeholder="Password"
               placeholderTextColor="#bbb"
               secureTextEntry
-              // Default value shown in the image
+              value={password}
+              onChangeText={setPassword} // Bind password state
             />
           </View>
 
@@ -80,8 +118,8 @@ const Signup = () => {
           {/* Or Divider */}
           <Text style={styles.orText}>Or</Text>
 
-          {/* Google Sign Up Button */}
-          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+          {/* Navigate to Login */}
+          <TouchableOpacity style={styles.googleButton} onPress={() => navigation.navigate('Login')}>
             <Text style={styles.googleText}>Already Have an Account?</Text>
           </TouchableOpacity>
 
@@ -98,6 +136,7 @@ const Signup = () => {
 };
 
 const styles = StyleSheet.create({
+  // Same styles as provided earlier
   container: {
     flex: 1,
     backgroundColor: '#000',
@@ -166,7 +205,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 15,
     alignItems: 'center',
-    marginBottom:55,
+    marginBottom: 55,
   },
   googleText: {
     color: '#333',
