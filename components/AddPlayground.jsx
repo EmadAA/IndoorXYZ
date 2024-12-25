@@ -1,6 +1,8 @@
-import { addDoc, collection } from "firebase/firestore"; // Firestore methods
+import { addDoc, collection } from "firebase/firestore";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Platform,
   StyleSheet,
@@ -9,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { db } from "../Config/Firebase"; // Import Firestore config
+import { auth, db } from "../Config/Firebase";
 
 export default function BookingScreen() {
   const [date, setDate] = useState(new Date());
@@ -18,30 +20,97 @@ export default function BookingScreen() {
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
   const [price, setPrice] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const validateForm = () => {
+    if (!name.trim()) {
+      Alert.alert("Error", "Please enter your name");
+      return false;
+    }
+    if (!phone.trim()) {
+      Alert.alert("Error", "Please enter your phone number");
+      return false;
+    }
+    if (!location.trim()) {
+      Alert.alert("Error", "Please enter the location");
+      return false;
+    }
+    if (!price.trim()) {
+      Alert.alert("Error", "Please enter the price");
+      return false;
+    }
+    return true;
+  };
 
   const onChange = (event, selectedDate) => {
     setShowPicker(Platform.OS === "ios");
     if (selectedDate) setDate(selectedDate);
   };
 
-  // Handle form submission and add booking to Firestore
   const handleSubmit = async () => {
-    // Booking data to send to Firestore
-    const bookingData = {
-      name,
-      phone,
-      location,
-      price,
-      date: date.toISOString(),
-      createdAt: new Date(),
-    };
+    if (!validateForm()) return;
+    
+    // Check if user is authenticated
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      Alert.alert("Error", "You must be logged in to make a booking");
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      // Add data to the "bookings" collection
-      const docRef = await addDoc(collection(db, "bookings"), bookingData);
-      console.log("Booking added with ID:", docRef.id);
+      // Booking data with user ID and additional fields
+      const bookingData = {
+        name,
+        phone,
+        location,
+        price: parseFloat(price),
+        date: date.toISOString(),
+        createdAt: new Date().toISOString(),
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        status: 'pending', // For booking status tracking
+        paymentStatus: 'unpaid', // For payment tracking
+        bookingReference: `BK${Date.now()}`, // Unique booking reference
+      };
+
+      // Add to user-specific subcollection
+      const userBookingsRef = collection(db, `users/${currentUser.uid}/bookings`);
+      const docRef = await addDoc(userBookingsRef, bookingData);
+
+      // Also add to main bookings collection with user reference
+      const mainBookingsRef = collection(db, "bookings");
+      await addDoc(mainBookingsRef, {
+        ...bookingData,
+        bookingId: docRef.id,
+      });
+
+      Alert.alert(
+        "Success",
+        "Booking added successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Clear form after successful submission
+              setName("");
+              setPhone("");
+              setLocation("");
+              setPrice("");
+              setDate(new Date());
+            },
+          },
+        ]
+      );
     } catch (error) {
       console.error("Error adding booking:", error);
+      Alert.alert(
+        "Error",
+        "Failed to add booking. Please try again later."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,12 +119,12 @@ export default function BookingScreen() {
       <Image source={require("../assets/play.jpg")} style={styles.image} />
 
       <View style={styles.form}>
-        {/* Date picker functionality can be added here */}
         <TextInput
           style={styles.input}
           placeholder="Your Name"
           value={name}
           onChangeText={setName}
+          editable={!isLoading}
         />
 
         <TextInput
@@ -64,6 +133,7 @@ export default function BookingScreen() {
           value={phone}
           keyboardType="phone-pad"
           onChangeText={setPhone}
+          editable={!isLoading}
         />
 
         <TextInput
@@ -71,6 +141,7 @@ export default function BookingScreen() {
           placeholder="Location"
           value={location}
           onChangeText={setLocation}
+          editable={!isLoading}
         />
 
         <TextInput
@@ -79,10 +150,19 @@ export default function BookingScreen() {
           value={price}
           keyboardType="numeric"
           onChangeText={setPrice}
+          editable={!isLoading}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Add Now</Text>
+        <TouchableOpacity 
+          style={[styles.button, isLoading && styles.disabledButton]}
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Add Now</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>

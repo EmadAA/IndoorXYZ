@@ -1,56 +1,122 @@
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { db } from '../Config/Firebase'; // Import Firebase config file
-import BottomNavbar from "../components/BottomNavbar"; // Import BottomNavbar
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { db } from '../Config/Firebase';
+import BottomNavbar from "../components/BottomNavbar";
 
 const Profile = () => {
   const navigation = useNavigation();
-  const [userData, setUserData] = useState(null); // State to hold user data
-  const [loading, setLoading] = useState(true); // State to handle loading state
-  const [activeTab, setActiveTab] = useState('profile'); // Active tab for BottomNavbar
+  const [userData, setUserData] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('profile');
 
   useEffect(() => {
-    // Fetch user data after component mounts
-    const fetchUserData = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser; // Get the current authenticated user
-
-      if (user) {
-        try {
-          // Reference to the user document in the Firestore database
-          const userDocRef = doc(db, 'users', user.uid);
-          const docSnap = await getDoc(userDocRef); // Get the user document snapshot
-
-          if (docSnap.exists()) {
-            // Set the user data from the Firestore document
-            setUserData(docSnap.data());
-          } else {
-            console.log('No such user!');
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        } finally {
-          setLoading(false); // Set loading state to false after data fetch
-        }
-      } else {
-        console.log('No user is logged in');
-        setLoading(false); // If no user is logged in, stop loading
-      }
-    };
-
-    fetchUserData(); // Call the function to fetch user data
+    fetchUserDataAndBookings();
   }, []);
 
+  const fetchUserDataAndBookings = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch user data
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        setUserData(userDocSnap.data());
+      }
+
+      // Fetch user's bookings from the main bookings collection
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(bookingsRef, where('userId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      
+      const bookingsData = [];
+      querySnapshot.forEach((doc) => {
+        bookingsData.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+
+      setBookings(bookingsData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNavigate = (screen) => {
-    setActiveTab('addIndoor'); // Update activeTab state
-    navigation.navigate(screen); // Navigate to the screen passed as an argument
+    setActiveTab('addIndoor');
+    navigation.navigate(screen);
+  };
+
+  const handleEdit = (bookingId) => {
+    // Navigate to edit screen with booking data
+    navigation.navigate('EditBooking', { bookingId });
+  };
+
+  const handleCancel = async (bookingId) => {
+    Alert.alert(
+      'Cancel Booking',
+      'Are you sure you want to cancel this booking?',
+      [
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: async () => {
+            // Add cancellation logic here
+            // You might want to update the status rather than delete
+            try {
+              // Update the booking status to cancelled
+              const bookingRef = doc(db, 'bookings', bookingId);
+              await updateDoc(bookingRef, {
+                status: 'cancelled',
+                cancelledAt: new Date().toISOString()
+              });
+              
+              // Refresh bookings
+              fetchUserDataAndBookings();
+              Alert.alert('Success', 'Booking cancelled successfully');
+            } catch (error) {
+              console.error('Error cancelling booking:', error);
+              Alert.alert('Error', 'Failed to cancel booking');
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
-    return <Text>Loading...</Text>; // Show loading text while fetching data
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8A5EFF" />
+      </View>
+    );
   }
 
   return (
@@ -58,13 +124,13 @@ const Profile = () => {
       {/* Profile Section */}
       <View style={styles.profileCard}>
         <Image
-          source={{ uri: userData?.profileImage || 'https://via.placeholder.com/100' }} // Replace with actual profile image
+          source={{ uri: userData?.profileImage || 'https://via.placeholder.com/100' }}
           style={styles.profileImage}
         />
         <View style={styles.profileDetails}>
-          <Text style={styles.name}>{userData?.name || 'John Snow'}</Text>
-          <Text style={styles.location}>{userData?.location || 'Unknown Location'}</Text>
-          <Text style={styles.phone}>{userData?.phone || '+088 14 484 ****'}</Text>
+          <Text style={styles.name}>{userData?.name || 'User'}</Text>
+          <Text style={styles.location}>{userData?.location || 'No location set'}</Text>
+          <Text style={styles.phone}>{userData?.phone || 'No phone number'}</Text>
           <TouchableOpacity>
             <Text style={styles.socialLink}>Add Social Media Link</Text>
           </TouchableOpacity>
@@ -72,34 +138,47 @@ const Profile = () => {
       </View>
 
       {/* Add Indoor Button */}
-      <TouchableOpacity style={styles.addIndoorButton} onPress={() => handleNavigate('AddPlayground')}>
+      <TouchableOpacity 
+        style={styles.addIndoorButton} 
+        onPress={() => handleNavigate('AddPlayground')}
+      >
         <Text style={styles.addIndoorText}>Add Indoor</Text>
       </TouchableOpacity>
 
       {/* Booking Cards */}
-      {[1, 2].map((_, index) => (
-        <View key={index} style={styles.bookingCard}>
-          <Image
-            source={{
-              uri: 'https://kaboom.org/wp-content/uploads/2024/05/IMG_2615.jpg', // Replace with actual image
-            }}
-            style={styles.bookingImage}
-          />
-          <View style={styles.bookingDetails}>
-            <Text style={styles.locationText}>Baluchor, Sylhet</Text>
-            <Text style={styles.indoorName}>King Futsal</Text>
-            <Text style={styles.priceText}>৳500 Per Hour</Text>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.editButton}>
-                <Text style={styles.buttonText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton}>
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
+      {bookings.length === 0 ? (
+        <View style={styles.noBookings}>
+          <Text style={styles.noBookingsText}>No bookings found</Text>
+        </View>
+      ) : (
+        bookings.map((booking) => (
+          <View key={booking.id} style={styles.bookingCard}>
+            <Image
+              source={{ uri: booking.imageUrl || 'https://via.placeholder.com/300' }}
+              style={styles.bookingImage}
+            />
+            <View style={styles.bookingDetails}>
+              <Text style={styles.locationText}>{booking.location}</Text>
+              <Text style={styles.indoorName}>{booking.name}</Text>
+              <Text style={styles.priceText}>৳{booking.price} Per Hour</Text>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity 
+                  style={styles.editButton}
+                  onPress={() => handleEdit(booking.id)}
+                >
+                  <Text style={styles.buttonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => handleCancel(booking.id)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      ))}
+        ))
+      )}
 
       {/* Bottom Navbar */}
       <BottomNavbar activeTab={activeTab} setActiveTab={setActiveTab} />

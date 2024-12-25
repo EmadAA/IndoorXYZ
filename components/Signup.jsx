@@ -1,6 +1,6 @@
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore'; // Import Firestore functions
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -12,52 +12,82 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { auth, db } from '../Config/Firebase'; // Import Firebase auth and Firestore
+import { auth, db } from '../Config/Firebase';
 
 const Signup = () => {
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Handle sign-up action
   const handleSignUp = async () => {
+    // Input validation
     if (!email || !password || !name) {
       Alert.alert('Error', 'Please fill out all fields.');
       return;
     }
 
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password should be at least 6 characters long.');
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      // Firebase sign-up method
+      // Create authentication user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Add user data to Firestore after sign-up
-      await addUserDataToFirestore(user);
-
-      Alert.alert('Success', 'Account created successfully!');
-      navigation.navigate('Login'); // Redirect to login screen
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Signup Failed', error.message);
-    }
-  };
-
-  // Add user data to Firestore
-  const addUserDataToFirestore = async (user) => {
-    try {
-      const userDocRef = doc(db, 'users', user.uid); // Create a reference to the user's Firestore document
+      // Create user document in Firestore
+      const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
-        name: name, // Add user-provided name
-        email: user.email, // Use the email from the authentication result
-        profileImage: '', // Add default or placeholder profile image if available
-        location: '', // Example additional field (could be empty initially)
-        phone: '', // Example additional field (could be empty initially)
+        uid: user.uid,
+        name: name,
+        email: user.email,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+        profileImage: '',
+        location: '',
+        phone: '',
+        isNewUser: true,
+        userType: 'regular',
+        // Add any additional fields you need
       });
 
-      console.log('User data added to Firestore');
+      Alert.alert(
+        'Success',
+        'Account created successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login')
+          }
+        ]
+      );
     } catch (error) {
-      console.error('Error adding user data to Firestore:', error);
+      let errorMessage = 'An error occurred during sign up.';
+      
+      // Handle specific Firebase error codes
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already registered. Please use a different email or try logging in.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Please choose a stronger password.';
+          break;
+        default:
+          console.error('Signup error:', error);
+      }
+      
+      Alert.alert('Sign Up Failed', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,7 +97,7 @@ const Signup = () => {
         {/* Header Logo */}
         <View style={styles.header}>
           <Image
-            source={require('../assets/Logo.png')} // Replace with your logo URL
+            source={require('../assets/Logo.png')}
             style={styles.logo}
           />
         </View>
@@ -83,7 +113,8 @@ const Signup = () => {
               placeholder="Enter Name (Ex. Indoor XYZ)"
               placeholderTextColor="#bbb"
               value={name}
-              onChangeText={setName} // Bind name state
+              onChangeText={setName}
+              editable={!isLoading}
             />
           </View>
 
@@ -94,7 +125,10 @@ const Signup = () => {
               placeholder="Email (Ex. indoorxyz@gmail.com)"
               placeholderTextColor="#bbb"
               value={email}
-              onChangeText={setEmail} // Bind email state
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!isLoading}
             />
           </View>
 
@@ -102,29 +136,40 @@ const Signup = () => {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder="Password (minimum 6 characters)"
               placeholderTextColor="#bbb"
               secureTextEntry
               value={password}
-              onChangeText={setPassword} // Bind password state
+              onChangeText={setPassword}
+              editable={!isLoading}
             />
           </View>
 
           {/* Sign Up Button */}
-          <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          <TouchableOpacity 
+            style={[styles.signUpButton, isLoading && styles.disabledButton]}
+            onPress={handleSignUp}
+            disabled={isLoading}
+          >
+            <Text style={styles.signUpButtonText}>
+              {isLoading ? 'Creating Account...' : 'Sign Up'}
+            </Text>
           </TouchableOpacity>
 
           {/* Or Divider */}
           <Text style={styles.orText}>Or</Text>
 
           {/* Navigate to Login */}
-          <TouchableOpacity style={styles.googleButton} onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity 
+            style={styles.googleButton} 
+            onPress={() => navigation.navigate('Login')}
+            disabled={isLoading}
+          >
             <Text style={styles.googleText}>Already Have an Account?</Text>
           </TouchableOpacity>
 
           {/* Contact Support */}
-          <TouchableOpacity>
+          <TouchableOpacity disabled={isLoading}>
             <Text style={styles.contactText}>
               Did You Face Any Issue? <Text style={styles.contactLink}>Contact US</Text>
             </Text>
@@ -136,7 +181,6 @@ const Signup = () => {
 };
 
 const styles = StyleSheet.create({
-  // Same styles as provided earlier
   container: {
     flex: 1,
     backgroundColor: '#000',
@@ -187,6 +231,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     marginBottom: 20,
+  },
+  disabledButton: {
+    backgroundColor: '#B8B8B8',
   },
   signUpButtonText: {
     color: '#fff',
