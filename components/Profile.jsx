@@ -12,8 +12,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { db } from '../Config/Firebase';
 import BottomNavbar from "../components/BottomNavbar";
+import { db } from '../Config/Firebase';
 
 const Profile = () => {
   const navigation = useNavigation();
