@@ -11,9 +11,9 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import SearchSection from '../components/SearchSection';
 import { db } from '../Config/Firebase';
 import BottomNavbar from './BottomNavbar';
+import SearchSection from './SearchSection';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -25,34 +25,22 @@ const Home = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      console.log('Fetching bookings...');
 
       const bookingsRef = collection(db, 'bookings');
       const q = query(bookingsRef);
-      
       const querySnapshot = await getDocs(q);
-      console.log('Number of documents:', querySnapshot.size);
 
-      const bookingsList = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        console.log('Document data:', data);
-        
-        bookingsList.push({
-          id: doc.id,
-          location: data.location || 'Location not specified',
-          name: data.name || 'Unnamed',
-          price: data.price || '0',
-          phone: data.phone || 'N/A',
-          date: data.date || '',
-          createdAt: data.createdAt || null,
-          // You might want to derive status based on date or other fields
-          status: 'Available' // You can modify this based on your business logic
-        });
-      });
+      const bookingsList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        location: doc.data().location || 'Location not specified',
+        name: doc.data().name || 'Unnamed',
+        price: doc.data().price || '0',
+        phone: doc.data().phone || 'N/A',
+        date: doc.data().date || '',
+        status: doc.data().status || 'Available', // Ensure status is dynamically fetched
+      }));
 
-      console.log('Fetched bookings:', bookingsList);
       setBookings(bookingsList);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -69,13 +57,11 @@ const Home = () => {
     navigation.navigate('Booking', { bookingId });
   };
 
-
   const renderBooking = ({ item }) => {
-    // Determine the image source
     const imageSource = item.image
-      ? { uri: item.image } // Server image
-      : require(`../assets/play.jpg`); // Local image in your project folder
-  
+      ? { uri: item.image }
+      : require('../assets/play.jpg');
+
     return (
       <View style={styles.playgroundCard}>
         <Image source={imageSource} style={styles.playgroundImage} />
@@ -90,7 +76,10 @@ const Home = () => {
               <Text
                 style={[
                   styles.statusText,
-                  { backgroundColor: item.status === 'Available' ? '#4CAF50' : '#F44336' },
+                  {
+                    backgroundColor:
+                      item.status === 'Available' ? '#4CAF50' : '#F44336',
+                  },
                 ]}
               >
                 {item.status}
@@ -101,21 +90,10 @@ const Home = () => {
       </View>
     );
   };
-  
-  
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.logoText}>
-          INDOOR <Text style={styles.logoHighlight}>XYZ</Text>
-        </Text>
-        <TouchableOpacity>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-      </View>
-
+  // Add Header Component for FlatList
+  const renderHeader = () => (
+    <View>
       {/* Search Section */}
       <View style={styles.searchSection}>
         <SearchSection />
@@ -125,8 +103,8 @@ const Home = () => {
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.filterSection}>
           {['All', 'Football', 'Cricket', 'Badminton'].map((filter) => (
-            <TouchableOpacity 
-              key={filter} 
+            <TouchableOpacity
+              key={filter}
               onPress={() => setActiveFilter(filter)}
             >
               <Text
@@ -141,36 +119,41 @@ const Home = () => {
           ))}
         </View>
       </ScrollView>
+    </View>
+  );
 
-      {/* Bookings List */}
-      <View style={styles.playgroundsSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Available Bookings</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>View All</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {loading ? (
-          <ActivityIndicator size="large" color="#4CAF50" style={styles.loader} />
-        ) : bookings.length === 0 ? (
-          <Text style={styles.noPlaygroundsText}>No bookings available</Text>
-        ) : (
-          <FlatList
-            data={bookings}
-            renderItem={renderBooking}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-          />
-        )}
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.logoText}>
+          INDOOR <Text style={styles.logoHighlight}>XYZ</Text>
+        </Text>
+        <TouchableOpacity>
+          <Text style={styles.menuIcon}>☰</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* FlatList as Main Scroller */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#4CAF50" style={styles.loader} />
+      ) : bookings.length === 0 ? (
+        <Text style={styles.noPlaygroundsText}>No bookings available</Text>
+      ) : (
+        <FlatList
+          data={bookings}
+          renderItem={renderBooking}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderHeader} // Add the Search and Filter sections here
+          contentContainerStyle={styles.playgroundsSection}
+        />
+      )}
 
       {/* Bottom Navigation */}
       <BottomNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
-    </ScrollView>
+    </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -196,29 +179,11 @@ const styles = StyleSheet.create({
   menuIcon: {
     fontSize: 24,
   },
-  searchSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-    height: 40,
-  },
-  findNowButton: {
-    backgroundColor: '#7A67FF',
-    borderRadius: 10,
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  findNowText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  // searchSection: {
+  //   paddingHorizontal: 20,
+  //   paddingVertical: 10,
+  //   backgroundColor: '#fff',
+  // },
   filterSection: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -241,20 +206,6 @@ const styles = StyleSheet.create({
   },
   playgroundsSection: {
     paddingHorizontal: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    paddingVertical: 10,
-    fontWeight: 'bold',
-  },
-  viewAllText: {
-    color: '#7A67FF',
   },
   playgroundCard: {
     flexDirection: 'column',
@@ -311,7 +262,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
   },
-  // Additional styles for new elements in the working version
   loader: {
     marginVertical: 20,
   },
@@ -321,16 +271,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  phoneText: {
-    fontSize: 14,
-    color: '#777',
-    marginTop: 5,
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#777',
-    marginTop: 5,
-  }
 });
 
 export default Home;

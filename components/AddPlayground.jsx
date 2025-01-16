@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { auth, db } from "../Config/Firebase";
 
-export default function BookingScreen() {
+ function BookingScreen() {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [name, setName] = useState("");
@@ -24,7 +24,7 @@ export default function BookingScreen() {
 
   const validateForm = () => {
     if (!name.trim()) {
-      Alert.alert("Error", "Please enter your name");
+      Alert.alert("Error", "Please enter Indoor name");
       return false;
     }
     if (!phone.trim()) {
@@ -206,3 +206,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+export default BookingScreen;
