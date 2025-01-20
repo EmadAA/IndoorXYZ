@@ -121,7 +121,7 @@ import { auth, db } from "../Config/Firebase";
       <View style={styles.form}>
         <TextInput
           style={styles.input}
-          placeholder="Your Name"
+          placeholder="Indoor Name"
           value={name}
           onChangeText={setName}
           editable={!isLoading}
@@ -129,7 +129,7 @@ import { auth, db } from "../Config/Firebase";
 
         <TextInput
           style={styles.input}
-          placeholder="Phone Number"
+          placeholder="Bkash Number"
           value={phone}
           keyboardType="phone-pad"
           onChangeText={setPhone}

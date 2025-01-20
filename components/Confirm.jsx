@@ -1,6 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import TimePicker from './TimePicker';
 
 const Confirm = () => {
   const [date, setDate] = useState(new Date());
@@ -36,14 +37,7 @@ const Confirm = () => {
         </Text>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Date & Time</Text>
-        <TouchableOpacity
-          style={styles.dateTimeInput}
-          onPress={() => setShowDatePicker(!showDatePicker)}
-        >
-          <Text style={styles.dateTimeText}>
-            {date.toLocaleString()}
-          </Text>
-        </TouchableOpacity>
+        <TimePicker />
         {showDatePicker && (
           <DateTimePicker
             value={date}

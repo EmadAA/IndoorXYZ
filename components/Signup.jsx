@@ -19,12 +19,12 @@ const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Handle sign-up action
   const handleSignUp = async () => {
-    // Input validation
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !phone) {
       Alert.alert('Error', 'Please fill out all fields.');
       return;
     }
@@ -33,63 +33,54 @@ const Signup = () => {
       Alert.alert('Error', 'Password should be at least 6 characters long.');
       return;
     }
-
+  
+    if (!/^\d{10,15}$/.test(phone)) {
+      Alert.alert('Error', 'Please enter a valid phone number.');
+      return;
+    }
+  
     setIsLoading(true);
-
     try {
-      // Create authentication user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Create user document in Firestore
+  
+      // Save user data to Firestore, including phone number
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         uid: user.uid,
         name: name,
         email: user.email,
+        phone: phone,
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),
         profileImage: '',
         location: '',
-        phone: '',
         isNewUser: true,
         userType: 'regular',
-        // Add any additional fields you need
       });
 
-      Alert.alert(
-        'Success',
-        'Account created successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login')
-          }
-        ]
-      );
-    } catch (error) {
-      let errorMessage = 'An error occurred during sign up.';
-      
-      // Handle specific Firebase error codes
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = 'This email is already registered. Please use a different email or try logging in.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'Please choose a stronger password.';
-          break;
-        default:
-          console.error('Signup error:', error);
-      }
-      
-      Alert.alert('Sign Up Failed', errorMessage);
-    } finally {
-      setIsLoading(false);
+
+   Alert.alert('Success', 'Account created successfully!', [
+      { text: 'OK', onPress: () => navigation.navigate('Login') },
+    ]);
+  } catch (error) {
+    let errorMessage = 'An error occurred during sign up.';
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        errorMessage = 'This email is already registered.';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = 'Please enter a valid email address.';
+        break;
+      case 'auth/weak-password':
+        errorMessage = 'Please choose a stronger password.';
+        break;
     }
-  };
+    Alert.alert('Sign Up Failed', errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -131,7 +122,18 @@ const Signup = () => {
               editable={!isLoading}
             />
           </View>
-
+          
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              placeholderTextColor="#bbb"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              editable={!isLoading}
+            />
+          </View>
           {/* Password Input */}
           <View style={styles.inputContainer}>
             <TextInput

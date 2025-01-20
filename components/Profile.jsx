@@ -124,17 +124,14 @@ const Profile = () => {
       {/* Profile Section */}
       <View style={styles.profileCard}>
         <Image
-          source={{ uri: userData?.profileImage || 'https://via.placeholder.com/100' }}
+          source={{uri:"https://via.placeholder.com/100"}}
           style={styles.profileImage}
         />
-        <View style={styles.profileDetails}>
-          <Text style={styles.name}>{userData?.name || 'User'}</Text>
-          <Text style={styles.location}>{userData?.location || 'No location set'}</Text>
-          <Text style={styles.phone}>{userData?.phone || 'No phone number'}</Text>
-          <TouchableOpacity>
-            <Text style={styles.socialLink}>Add Social Media Link</Text>
-          </TouchableOpacity>
-        </View>
+       <View style={styles.profileDetails}>
+            <Text style={styles.name}>{ userData?.name || 'User'}</Text>
+            <Text style={styles.phone}>{userData?.phone || 'No phone number'}</Text>
+            
+      </View>
       </View>
 
       {/* Add Indoor Button */}
@@ -172,7 +169,7 @@ const Profile = () => {
                   style={styles.cancelButton}
                   onPress={() => handleCancel(booking.id)}
                 >
-                  <Text style={styles.buttonText}>Cancel</Text>
+                  <Text style={styles.buttonText}>Delete</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -213,18 +210,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#333",
   },
-  location: {
-    fontSize: 14,
-    color: "#666",
-    marginVertical: 3,
-  },
   phone: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#666",
+    marginTop: 5,
   },
   socialLink: {
     fontSize: 14,
