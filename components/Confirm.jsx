@@ -1,97 +1,101 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { getAuth } from 'firebase/auth';
+import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { db } from '../Config/Firebase';
 import TimePicker from './TimePicker';
 
 const Confirm = () => {
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [timeSlot, setTimeSlot] = useState({ from: null, to: null });
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [cost, setCost] = useState('');
   const [tranxID, setTranxID] = useState('');
   const [paymentType, setPaymentType] = useState('Advance Payment');
 
-  const handleDateTimeChange = (event, selectedDate) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setDate(selectedDate);
+  const handleTimeChange = (slot) => {
+    setTimeSlot(slot);
+  };
+
+  const handleSubmit = async () => {
+    const auth = getAuth();
+    const userId = auth.currentUser?.uid;
+  
+    if (!userId) {
+      alert('User not authenticated.');
+      return;
+    }
+  
+    const bookingData = {
+      fromTime: timeSlot.from,
+      toTime: timeSlot.to,
+      name: name.trim(),
+      phone: phone.trim(),
+      cost: parseFloat(cost),
+      tranxID: tranxID.trim(),
+      paymentType,
+      userId: userId,
+      createdAt: new Date().toISOString(),
+    };
+  
+    try {
+      const docRef = await addDoc(collection(db, 'indoorBookings'), bookingData);
+      console.log('Document written with ID:', docRef.id);
+      alert('Booking Confirmed!');
+    } catch (error) {
+      console.error('Error adding document:', error);
+      alert('Error confirming booking.');
     }
   };
 
-  const handleSubmit = () => {
-    // Add your submission logic here
-    console.log('Booking Info:', {
-      date,
-      name,
-      phone,
-      cost,
-      tranxID,
-      paymentType,
-    });
-  };
   return (
-    <View style={styles.container}>
-        <Text style={styles.headerText}>
-            Booking Info
-        </Text>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Date & Time</Text>
-        <TimePicker />
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="datetime"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateTimeChange}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.headerText}>Booking Info</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Select Time Slot</Text>
+          <TimePicker onTimeSelect={handleTimeChange} />
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Your Name"
+            value={name}
+            onChangeText={setName}
           />
-        )}
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Your Name"
-          value={name}
-          onChangeText={setName}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Your Number"
-          value={phone}
-          keyboardType="phone-pad"
-          onChangeText={setPhone}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Cost"
-          value={cost}
-          keyboardType="numeric"
-          onChangeText={setCost}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Tranx ID"
-          value={tranxID}
-          onChangeText={setTranxID}
-        />
-      </View>
-{/* Payment Option is Here */}
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Payment Type</Text>
-        <View style={styles.paymentTypeContainer}>
-          <View style={styles.paymentTypeOption}>
-            <Text style={styles.paymentTypeText}>Advance Payment</Text>
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Your Number"
+            value={phone}
+            keyboardType="phone-pad"
+            onChangeText={setPhone}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Cost"
+            value={cost}
+            keyboardType="numeric"
+            onChangeText={setCost}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter TranxID"
+            value={tranxID}
+            onChangeText={setTranxID}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Payment Type</Text>
+          <View style={styles.paymentTypeContainer}>
             <TouchableOpacity
               style={[
                 styles.paymentTypeCheckbox,
@@ -99,14 +103,8 @@ const Confirm = () => {
               ]}
               onPress={() => setPaymentType('Advance Payment')}
             >
-              {paymentType === 'Advance Payment' && (
-                <View style={styles.checkboxIndicator} />
-              )}
+              <Text style={styles.paymentTypeText}>Advance Payment</Text>
             </TouchableOpacity>
-            
-          </View>
-          <View style={styles.paymentTypeOption}>
-          <Text style={styles.paymentTypeText}>Full Payment</Text>
             <TouchableOpacity
               style={[
                 styles.paymentTypeCheckbox,
@@ -114,77 +112,52 @@ const Confirm = () => {
               ]}
               onPress={() => setPaymentType('Full Payment')}
             >
-              {paymentType === 'Full Payment' && (
-                <View style={styles.checkboxIndicator} />
-              )}
+              <Text style={styles.paymentTypeText}>Full Payment</Text>
             </TouchableOpacity>
-            
           </View>
         </View>
-      </View>
-
-      <View style={styles.inputContainer}>
         <TouchableOpacity style={styles.confirmButton} onPress={handleSubmit}>
           <Text style={styles.confirmButtonText}>Confirm</Text>
         </TouchableOpacity>
-      </View>
-      <View style={styles.inputContainer}>
-       <Text style={styles.warningText}>
-        You can cancel your booking within 20 minutes of confirmation !
-       </Text>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'stretch',
     backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 30,
   },
-  headerText:{
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 30,
-        textAlign: 'center',
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 8,
-    marginLeft:1,
-  },
-  dateTimeInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  dateTimeText: {
-    fontSize: 16,
-    color: '#333',
+    marginBottom: 5,
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    padding: 10,
     fontSize: 16,
   },
   confirmButton: {
     backgroundColor: '#7A67FF',
     borderRadius: 8,
-    paddingVertical: 12,
-    marginHorizontal:5,
+    paddingVertical: 15,
     alignItems: 'center',
   },
   confirmButtonText: {
@@ -193,41 +166,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   paymentTypeContainer: {
-    // flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  paymentTypeOption: {
     flexDirection: 'row',
-    alignItems: 'center',
-    margin:10,
     justifyContent: 'space-between',
   },
   paymentTypeCheckbox: {
-    width: 24,
-    height: 24,
+    flex: 1,
     borderWidth: 1,
     borderColor: '#7A67FF',
-    borderRadius: '50%',
-    marginRight: 8,
-    justifyContent: 'center',
+    borderRadius: 8,
     alignItems: 'center',
+    padding: 10,
+    marginHorizontal: 5,
   },
   selectedPaymentType: {
     backgroundColor: '#7A67FF',
   },
-  checkboxIndicator: {
-    width: 12,
-    height: 12,
-    backgroundColor: '#fff',
-    borderRadius: '50%',
-  },
   paymentTypeText: {
-    fontSize: 20,
-    color: '#333',
-  },
-  warningText:{
-    marginHorizontal:7,
-    color: '#333',
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

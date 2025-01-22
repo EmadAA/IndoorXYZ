@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const TimePicker = () => {
+const TimePicker = ({ onTimeSelect }) => {
   const [selectedFromTime, setSelectedFromTime] = useState(null);
   const [selectedToTime, setSelectedToTime] = useState(null);
   const times = [
@@ -12,17 +12,19 @@ const TimePicker = () => {
   const selectFromTime = (time) => {
     setSelectedFromTime(time);
     setSelectedToTime(null); // Reset toTime to ensure it is after fromTime
+    if (onTimeSelect) onTimeSelect({ from: time, to: null }); // Notify parent of change
   };
 
   const selectToTime = (time) => {
     if (times.indexOf(time) > times.indexOf(selectedFromTime)) {
       setSelectedToTime(time);
+      if (onTimeSelect) onTimeSelect({ from: selectedFromTime, to: time }); // Notify parent of change
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select Time:</Text>
+      <Text style={styles.title}>From:</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollView}>
         {times.map((time, index) => (
           <TouchableOpacity
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
-  }
+  },
 });
 
 export default TimePicker;
